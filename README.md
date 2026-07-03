@@ -2,6 +2,12 @@
 
 Wtermwidget is a very barebones terminal emulator widget for wayland using gtk-layer-shell and python. 
 
+# screenshots
+
+![tty-clock -c -C 3](/img/tty-clock.png)
+
+![neofetch](/img/neofetch.png)
+
 # instalation
 
 just download the python script and run:
