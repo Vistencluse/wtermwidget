@@ -26,6 +26,7 @@ Options:
     -h      display this message
     -c      display custom command (default: tty-clock -c -C 3)
     -a      set background alpha (default: 0.5)
+    -fg     set foreground RGBA color (default: \"1.0 0.72 0.15 1.0\") 
     -tw     set terminal width (default: 1920)
     -th     set terminal height (default: 1080)
     -tx     set terminal x alignment to left, center or end (default: center)
@@ -46,6 +47,7 @@ TERM_MARGIN_TOP = 20
 TERM_MARGIN_LEFT = 20
 TERM_MARGIN_RIGHT = 20
 TERM_MARGIN_BOTTOM = 20
+FG_COLOR = "1.0 0.72 0.15 1.0"
 
 class WidgetWindow(Gtk.Window):
     def __init__(self):
@@ -98,7 +100,7 @@ class WidgetWindow(Gtk.Window):
         bg.set_name("bgpane")
         overlay.add(bg)  
 
-        # terminal widget
+        # terminal widget0.15
 
         term = Vte.Terminal()
 
@@ -132,8 +134,9 @@ class WidgetWindow(Gtk.Window):
             Gdk.RGBA(0.9,0.9,0.9,1),    # 7: white
         ]
         
+        fgcolor = [float(num) for num in FG_COLOR.split()]
         term.set_colors(
-            Gdk.RGBA(1.0, 0.72, 0.15, 1.0),  # foreground
+            Gdk.RGBA(fgcolor[0], fgcolor[1], fgcolor[2], fgcolor[3]),  # foreground
             Gdk.RGBA(0, 0, 0, BG_ALPHA),     # background
             palette
         )
@@ -174,6 +177,8 @@ if len(sys.argv) > 1:
                     CMD = args[idx+1].split()
                 case "-a":
                     BG_ALPHA = float(args[idx+1])
+                case "-fg":
+                    FG_COLOR = args[idx+1]
                 case "-tw":
                     TERM_WIDTH = int(args[idx+1])
                 case "-th":
