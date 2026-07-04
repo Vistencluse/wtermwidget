@@ -33,20 +33,23 @@ Options:
     -c      display custom command (default: tty-clock -c -C 3)
     -a      set background alpha (default: 0.5)
     -fg     set foreground RGBA color (default: \"1.0 0.72 0.15 1.0\")
-    -tw     set terminal width (default: 1920)
-    -th     set terminal height (default: 1080)
+    -tw     set terminal width (default: 1900)
+    -th     set terminal height (default: 1015)
     -tx     set terminal x alignment to left, center or end (default: center)
     -ty     set terminal y alignment to left, center or end (default: center)
     -mt     set terminal margin top (default: 20)
     -ml     set terminal margin left (default: 20)
     -mr     set terminal margin right (default: 20)
     -mb     set terminal margin bottom (default: 20)
+    -ts     enable high bg contrast for placement testing
 """
 
-CMD = ["tty-clock", "-c", "-C", "3"]
+#CMD = ["tty-clock", "-c", "-C", "3"]
+CMD = "tty-clock -c -C 3"
 BG_ALPHA = 0.5
-TERM_WIDTH = 1920
-TERM_HEIGHT = 1080
+TERM_ALPHA = 0.5
+TERM_WIDTH = 1900
+TERM_HEIGHT = 1015
 TERM_HALIGN = 'center'
 TERM_VALIGN = 'center'
 TERM_MARGIN_TOP = 20
@@ -106,7 +109,7 @@ class WidgetWindow(Gtk.Window):
         bg.set_name("bgpane")
         overlay.add(bg)
 
-        # terminal widget0.15
+        # terminal widget
 
         term = Vte.Terminal()
 
@@ -143,7 +146,7 @@ class WidgetWindow(Gtk.Window):
         fgcolor = [float(num) for num in FG_COLOR.split()]
         term.set_colors(
             Gdk.RGBA(fgcolor[0], fgcolor[1], fgcolor[2], fgcolor[3]),  # foreground
-            Gdk.RGBA(0, 0, 0, BG_ALPHA),     # background
+            Gdk.RGBA(0, 0, 0, TERM_ALPHA),     # background
             palette
         )
 
@@ -151,14 +154,14 @@ class WidgetWindow(Gtk.Window):
             Pango.FontDescription("monospace 15")
         )
 
-        term.set_cursor_shape(Vte.CursorShape.UNDERLINE)
+        term.set_cursor_shape(Vte.CursorShape.IBEAM)
 
         # launch terminal
 
         term.spawn_async(
             Vte.PtyFlags.DEFAULT,
             None,
-            CMD,
+            [Vte.get_user_shell() or "/bin/bash", "-c", CMD],
             [],
             GLib.SpawnFlags.DEFAULT,
             None,
@@ -182,9 +185,10 @@ if len(sys.argv) > 1:
                     print(HELP)
                     quit()
                 case "-c":
-                    CMD = args[idx+1].split()
+                    CMD = args[idx+1]
                 case "-a":
                     BG_ALPHA = float(args[idx+1])
+                    TERM_ALPHA = BG_ALPHA
                 case "-fg":
                     FG_COLOR = args[idx+1]
                 case "-tw":
@@ -203,6 +207,9 @@ if len(sys.argv) > 1:
                     TERM_MARGIN_LEFT = int(args[idx+1])
                 case "-mb":
                     TERM_MARGIN_BOTTOM = int(args[idx+1])
+                case "-ts":
+                    BG_ALPHA = 1
+                    TERM_ALPHA = 0
                 case _:
                     print(f"Unknown option: {1}", opt)
     except IndexError:
