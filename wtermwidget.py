@@ -151,6 +151,8 @@ class WidgetWindow(Gtk.Window):
             Pango.FontDescription("monospace 15")
         )
 
+        term.set_cursor_shape(Vte.CursorShape.UNDERLINE)
+
         # launch terminal
 
         term.spawn_async(
