@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 import sys
 import gi
+import os
 
 gi.require_version('Gtk', '3.0')
 gi.require_version("Vte", "2.91")
+
+#tput civis
 
 try:
     gi.require_version('GtkLayerShell', '0.1')
@@ -20,13 +26,13 @@ from gi.repository import Gtk, Vte, GLib, Gdk, Pango
 from gi.repository import GtkLayerShell as LayerShell
 
 HELP = """
-Usage: wtermwidget -h | -(opt) (value) ... 
+Usage: wtermwidget -h | -(opt) (value) ...
 
 Options:
     -h      display this message
     -c      display custom command (default: tty-clock -c -C 3)
     -a      set background alpha (default: 0.5)
-    -fg     set foreground RGBA color (default: \"1.0 0.72 0.15 1.0\") 
+    -fg     set foreground RGBA color (default: \"1.0 0.72 0.15 1.0\")
     -tw     set terminal width (default: 1920)
     -th     set terminal height (default: 1080)
     -tx     set terminal x alignment to left, center or end (default: center)
@@ -98,7 +104,7 @@ class WidgetWindow(Gtk.Window):
 
         bg = Gtk.Box()
         bg.set_name("bgpane")
-        overlay.add(bg)  
+        overlay.add(bg)
 
         # terminal widget0.15
 
@@ -133,7 +139,7 @@ class WidgetWindow(Gtk.Window):
             Gdk.RGBA(0.3,0.8,0.8,1),    # 6: cyan
             Gdk.RGBA(0.9,0.9,0.9,1),    # 7: white
         ]
-        
+
         fgcolor = [float(num) for num in FG_COLOR.split()]
         term.set_colors(
             Gdk.RGBA(fgcolor[0], fgcolor[1], fgcolor[2], fgcolor[3]),  # foreground
