@@ -20,14 +20,32 @@ from gi.repository import Gtk, Vte, GLib, Gdk, Pango
 from gi.repository import GtkLayerShell as LayerShell
 
 HELP = """
-Usage: wtermwidget -h | -c (COMMAND)
+Usage: wtermwidget -h | -(opt) (value) ... 
 
 Options:
     -h      display this message
     -c      display custom command (default: tty-clock -c -C 3)
+    -a      set background alpha (default: 0.5)
+    -tw     set terminal width (default: 1920)
+    -th     set terminal height (default: 1080)
+    -tx     set terminal x alignment to left, center or end (default: center)
+    -ty     set terminal y alignment to left, center or end (default: center)
+    -mt     set terminal margin top (default: 20)
+    -ml     set terminal margin left (default: 20)
+    -mr     set terminal margin right (default: 20)
+    -mb     set terminal margin bottom (default: 20)
 """
 
 CMD = ["tty-clock", "-c", "-C", "3"]
+BG_ALPHA = 0.5
+TERM_WIDTH = 1920
+TERM_HEIGHT = 1080
+TERM_HALIGN = 'center'
+TERM_VALIGN = 'center'
+TERM_MARGIN_TOP = 20
+TERM_MARGIN_LEFT = 20
+TERM_MARGIN_RIGHT = 20
+TERM_MARGIN_BOTTOM = 20
 
 class WidgetWindow(Gtk.Window):
     def __init__(self):
@@ -35,8 +53,6 @@ class WidgetWindow(Gtk.Window):
 
         self.set_decorated(False)
         self.set_resizable(False)
-        self.set_default_size(1920, 1080)
-
 
         # transparency
 
@@ -54,13 +70,56 @@ class WidgetWindow(Gtk.Window):
 
         LayerShell.set_layer(self, LayerShell.Layer.BACKGROUND)
 
+        # make host screen anchored to all sides (fullscreen)
+        for edge in (
+            LayerShell.Edge.LEFT,
+            LayerShell.Edge.RIGHT,
+            LayerShell.Edge.TOP,
+            LayerShell.Edge.BOTTOM,
+        ):
+            LayerShell.set_anchor(self, edge, True)
+
+        # bgpane background css
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(
+            ("#bgpane { background-color: rgba(0, 0, 0, %.3f); }" % BG_ALPHA).encode()
+        )
+        Gtk.StyleContext.add_provider_for_screen(
+            screen,
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+        # create background pane that fills whole screen
+        overlay = Gtk.Overlay()
+        self.add(overlay)
+
+        bg = Gtk.Box()
+        bg.set_name("bgpane")
+        overlay.add(bg)  
+
         # terminal widget
 
         term = Vte.Terminal()
 
-        self.add(term)
+        term.set_size_request(TERM_WIDTH, TERM_HEIGHT)
 
-        term.set_size(500, 200)
+        match TERM_HALIGN:
+            case "center": term.set_halign(Gtk.Align.CENTER)
+            case "start": term.set_halign(Gtk.Align.START)
+            case "end": term.set_halign(Gtk.Align.END)
+
+        match TERM_VALIGN:
+            case "center": term.set_valign(Gtk.Align.CENTER)
+            case "start": term.set_valign(Gtk.Align.START)
+            case "end": term.set_valign(Gtk.Align.END)
+
+        term.set_margin_top(TERM_MARGIN_TOP)
+        term.set_margin_start(TERM_MARGIN_LEFT)
+        term.set_margin_end(TERM_MARGIN_RIGHT)
+        term.set_margin_bottom(TERM_MARGIN_BOTTOM)
+
+        overlay.add_overlay(term)
 
         palette = [
             Gdk.RGBA(0,0,0,1),          # 0: black
@@ -75,7 +134,7 @@ class WidgetWindow(Gtk.Window):
         
         term.set_colors(
             Gdk.RGBA(1.0, 0.72, 0.15, 1.0),  # foreground
-            Gdk.RGBA(0, 0, 0, 0.70),         # background
+            Gdk.RGBA(0, 0, 0, BG_ALPHA),     # background
             palette
         )
 
@@ -102,16 +161,39 @@ class WidgetWindow(Gtk.Window):
 
 if len(sys.argv) > 1:
     args = sys.argv[1:]
-    for arg in args:
-        if arg == "-h":
-            print(HELP)
-            quit()
-        if arg == "-c":
-            try:
-                idx = args.index(arg)
-                CMD = args[idx+1].split()
-            except IndexError:
-                print('"-c" option selected but no command given.')
+    opts = [arg for arg in args if arg.startswith("-")]
+    try:
+        for opt in opts:
+            idx = args.index(opt)
+
+            match opt:
+                case "-h":
+                    print(HELP)
+                    quit()
+                case "-c":
+                    CMD = args[idx+1].split()
+                case "-a":
+                    BG_ALPHA = float(args[idx+1])
+                case "-tw":
+                    TERM_WIDTH = int(args[idx+1])
+                case "-th":
+                    TERM_HEIGHT = int(args[idx+1])
+                case "-tx":
+                    TERM_HALIGN = args[idx+1]
+                case "-ty":
+                    TERM_VALIGN = args[idx+1]
+                case "-mt":
+                    TERM_MARGIN_TOP = int(args[idx+1])
+                case "-mr":
+                    TERM_MARGIN_RIGHT = int(args[idx+1])
+                case "-ml":
+                    TERM_MARGIN_LEFT = int(args[idx+1])
+                case "-mb":
+                    TERM_MARGIN_BOTTOM = int(args[idx+1])
+                case _:
+                    print(f"Unknown option: {1}", opt)
+    except IndexError:
+        print('option selected but no value given.')
 
 win = WidgetWindow()
 Gtk.main()
