@@ -2,6 +2,7 @@
 
 Wtermwidget is a very barebones terminal emulator widget for wayland using gtk-layer-shell and python.
 Tested on COSMIC DE with cava, tty-clock, btop, pipes.sh and cowsay.
+Didn't work on Sway, I might attempt to fix it.
 
 # screenshots
 
@@ -52,7 +53,3 @@ Options:
     -mb     set terminal margin bottom (default: 20)
     -ts     enable high bg contrast for placement testing
 ```
-
-# planned features
-
-none. You're welcome to go through the script and modify it, it's quite straightforward.
